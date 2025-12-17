@@ -406,7 +406,7 @@
             crossorigin=""></script>
 
     <script>
-        // ข้อมูลคอนโด (เพิ่มข้อมูลชั้นและรายละเอียดครบถ้วน)
+        // ข้อมูลคอนโด (ข้อมูลชั้นครบถ้วนและถูกต้อง)
         const properties = [
             {
                 rank: 1,
@@ -429,14 +429,14 @@
             {
                 rank: 2,
                 name: "Ideo Q Phayathai",
-                nameTh: "ไอดีโอ คิว พญาไท",
+                nameTh: "ไอดีโอ คิู พญาไท",
                 lat: 13.755906097726632,
                 lng: 100.53277004848589,
                 size: 65,
                 bedrooms: 2,
                 bathrooms: 2,
                 price: 35000,
-                floor: null,
+                floor: "20",
                 station: "BTS พญาไท (เดิน 2-3 นาที)",
                 age: "อายุอาคาร 15 ปี",
                 features: "สระว่ายน้ำ, ต่อ Airport Link ได้",
@@ -454,7 +454,7 @@
                 bedrooms: 2,
                 bathrooms: 1,
                 price: 25000,
-                floor: null,
+                floor: "17",
                 station: "BTS พญาไท (เดิน 5 นาที)",
                 age: "อายุอาคาร 14 ปี",
                 features: "ซาวน่า, สระว่ายน้ำ",
@@ -490,7 +490,7 @@
                 bedrooms: 2,
                 bathrooms: 2,
                 price: 25000,
-                floor: null,
+                floor: "24",
                 station: "BTS ห้าแยกลาดพร้าว (เดิน 5 นาที)",
                 age: "ค่อนข้างใหม่",
                 features: "สระว่ายน้ำ, แบรนด์ไลน์",
@@ -571,7 +571,7 @@
             }
         }
 
-        // สร้างการ์ดคอนโด (เพิ่มข้อมูลชั้นและรายละเอียดครบถ้วน)
+        // สร้างการ์ดคอนโด
         function generatePropertyCards() {
             const container = document.getElementById('property-cards');
             

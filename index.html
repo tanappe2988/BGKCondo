@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>バンコク物件候補 - モバイル版</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossorigin=""/>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f8f9fa;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* タブナビゲーション */
+        .tab-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+        }
+        
+        .tab-button {
+            flex: 1;
+            padding: 16px;
+            background: white;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab-button.active {
+            color: #1a73e8;
+            border-bottom-color: #1a73e8;
+            background: #f8f9ff;
+        }
+        
+        .tab-button:active {
+            background: #e8f0fe;
+        }
+        
+        /* コンテンツエリア */
+        .content {
+            margin-top: 58px;
+            padding-bottom: 20px;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 地図スタイル */
+        #map {
+            width: 100%;
+            height: calc(100vh - 58px);
+        }
+        
+        /* Leafletポップアップカスタマイズ */
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        
+        .leaflet-popup-content {
+            margin: 12px 14px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .popup-content h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #1a73e8;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 6px;
+        }
+        
+        .popup-price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #d93025;
+            margin: 10px 0;
+        }
+        
+        .popup-highlight {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            padding: 8px 10px;
+            border-radius: 6px;
+            margin: 8px 0;
+            border-left: 4px solid #ffc107;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        
+        .popup-detail {
+            margin: 6px 0;
+            font-size: 13px;
+            color: #333;
+        }
+        
+        .popup-footer {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px dashed #ccc;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .popup-link {
+            display: block;
+            background: linear-gradient(135deg, #1a73e8, #1557b0);
+            color: white !important;
+            text-align: center;
+            padding: 10px 12px;
+            margin-top: 10px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+        
+        /* 物件リストスタイル */
+        .property-list {
+            padding: 16px;
+        }
+        
+        .list-header {
+            background: linear-gradient(135deg, #1a73e8, #1557b0);
+            color: white;
+            padding: 20px;
+            margin-bottom: 16px;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(26, 115, 232, 0.2);
+        }
+        
+        .list-header h2 {
+            font-size: 22px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        
+        .legend-mobile {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .legend-item-mobile {
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            color: white;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+        
+        .color-indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            margin-right: 8px;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+        
+        .property-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #e8eaed;
+        }
+        
+        .property-card:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .property-header {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        
+        .rank-badge {
+            background: linear-gradient(135deg, #1a73e8, #1557b0);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-right: 12px;
+            flex-shrink: 0;
+            box-shadow: 0 3px 8px rgba(26, 115, 232, 0.3);
+            min-width: 50px;
+            text-align: center;
+        }
+        
+        .property-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            line-height: 1.4;
+        }
+        
+        .property-price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #d93025;
+            margin: 16px 0;
+            text-align: center;
+            background: #fef7f0;
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px solid #fbbc04;
+        }
+        
+        .property-highlight {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+            border-left: 4px solid #ffc107;
+            font-weight: 600;
+            font-size: 14px;
+            color: #856404;
+            box-shadow: 0 2px 6px rgba(255, 193, 7, 0.2);
+        }
+        
+        .property-details {
+            margin: 12px 0;
+        }
+        
+        .detail-row {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            font-size: 15px;
+            color: #555;
+            line-height: 1.5;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-icon {
+            width: 28px;
+            margin-right: 12px;
+            flex-shrink: 0;
+            font-size: 16px;
+        }
+        
+        .property-footer {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 2px dashed #ddd;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
+        }
+        
+        .view-button {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            margin-top: 16px;
+            background: linear-gradient(135deg, #1a73e8, #1557b0);
+            color: white;
+            text-align: center;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 4px 16px rgba(26, 115, 232, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .view-button:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+        }
+        
+        /* カスタムマーカー番号 */
+        .custom-marker {
+            background-color: white;
+            border: 3px solid white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            color: white;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- タブナビゲーション -->
+    <div class="tab-container">
+        <button class="tab-button active" onclick="switchTab('map')">🗺 地図</button>
+        <button class="tab-button" onclick="switchTab('list')">📋 一覧</button>
+    </div>
+    
+    <!-- コンテンツ -->
+    <div class="content">
+        <!-- 地図タブ -->
+        <div id="map-tab" class="tab-content active">
+            <div id="map"></div>
+        </div>
+        
+        <!-- 一覧タブ -->
+        <div id="list-tab" class="tab-content">
+            <div class="property-list">
+                <div class="list-header">
+                    <h2>🏆 最終候補7物件</h2>
+                    <div class="legend-mobile">
+                        <div class="legend-item-mobile">
+                            <span class="color-indicator" style="background: #e74c3c;"></span>
+                            1位：最広68㎡
+                        </div>
+                        <div class="legend-item-mobile">
+                            <span class="color-indicator" style="background: #e67e22;"></span>
+                            2-3位：60㎡台
+                        </div>
+                        <div class="legend-item-mobile">
+                            <span class="color-indicator" style="background: #f39c12;"></span>
+                            4-5位：コスパ◎
+                        </div>
+                        <div class="legend-item-mobile">
+                            <span class="color-indicator" style="background: #27ae60;"></span>
+                            6-7位：60㎡
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 物件カード（データから自動生成） -->
+                <div id="property-cards"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+            crossorigin=""></script>
+
+    <script>
+        // 物件データ（指定座標＋リンク完備）
+        const properties = [
+            {
+                rank: 1,
+                name: "Belle Grand Rama 9",
+                lat: 13.760237221313165,
+                lng: 100.56921625457834,
+                size: 68,
+                bedrooms: 2,
+                bathrooms: 1,
+                price: 35000,
+                station: "MRT Phra Ram 9駅 徒歩5-8分",
+                age: "築12年",
+                features: "プール・フィットネス・敷地内商業施設",
+                color: "#e74c3c",
+                highlight: "今回最大の広さ！68㎡",
+                propertyUrl: "https://www.facebook.com/groups/6521519787867197/posts/25934857656106787/"
+            },
+            {
+                rank: 2,
+                name: "Ideo Q Phayathai",
+                lat: 13.755906097726632,
+                lng: 100.53277004848589,
+                size: 65,
+                bedrooms: 2,
+                bathrooms: 2,
+                price: 35000,
+                station: "BTS Phaya Thai駅 徒歩2-3分",
+                age: "築15年",
+                features: "プール・空港線直結",
+                color: "#e67e22",
+                highlight: "空港アクセス抜群",
+                propertyUrl: "https://propertyscout.co.th/en/2-br-condo-ideo-q-phayathai-near-bts-phaya-thai-1852140/"
+            },
+            {
+                rank: 3,
+                name: "The Address Phayathai",
+                lat: 13.759685947389874,
+                lng: 100.5317286545783,
+                size: 63,
+                bedrooms: 2,
+                bathrooms: 1,
+                price: 25000,
+                station: "BTS Phaya Thai駅 徒歩5分",
+                age: "築14年",
+                features: "サウナ・プール",
+                color: "#e67e22",
+                highlight: "最強コスパ！2.52㎡/1000B",
+                propertyUrl: "https://propertyscout.co.th/en/2-br-condo-the-address-phayathai-near-bts-phaya-thai-2351890/"
+            },
+            {
+                rank: 4,
+                name: "Thru Thonglor",
+                lat: 13.744439248847318,
+                lng: 100.58543526807097,
+                size: 62.4,
+                bedrooms: 2,
+                bathrooms: 2,
+                price: 25000,
+                station: "BTS Thong Lo駅（シャトル有）",
+                age: "築12年",
+                features: "プール・トンローエリア",
+                color: "#f39c12",
+                highlight: "おしゃれエリアで破格価格",
+                propertyUrl: "https://www.facebook.com/groups/1046291836187649/posts/2191321105018044/"
+            },
+            {
+                rank: 5,
+                name: "The Line Vibe",
+                lat: 13.817796190281511,
+                lng: 100.56709881040038,
+                size: 60,
+                bedrooms: 2,
+                bathrooms: 2,
+                price: 25000,
+                station: "BTS Ha Yaek Lat Phrao駅 徒歩5分",
+                age: "比較的新しい",
+                features: "プール・Lineブランド",
+                color: "#f39c12",
+                highlight: "60㎡で2バスルーム",
+                propertyUrl: "https://www.facebook.com/groups/661207761960248/posts/1383242806423403/"
+            },
+            {
+                rank: 6,
+                name: "Ideo O2",
+                lat: 13.67342536698527,
+                lng: 100.60445935773538,
+                size: 60,
+                bedrooms: 2,
+                bathrooms: 2,
+                price: 28000,
+                station: "BTS Bang Na駅 徒歩5-10分",
+                age: "築7年",
+                features: "3つのプール・リゾート級施設",
+                color: "#27ae60",
+                highlight: "リゾート並みの共用施設",
+                propertyUrl: "https://www.facebook.com/groups/1046291836187649/posts/2192147568268731/"
+            },
+            {
+                rank: 7,
+                name: "M Jatujak",
+                lat: 13.797914490603361,
+                lng: 100.55174575457877,
+                size: 60,
+                bedrooms: 2,
+                bathrooms: 2,
+                price: 30000,
+                station: "BTS Mo Chit/MRT Chatuchak Park駅 徒歩5分",
+                age: "築7年",
+                features: "プール・2路線利用可",
+                color: "#27ae60",
+                highlight: "2路線アクセス",
+                propertyUrl: "https://www.facebook.com/groups/2157264477895406/posts/4286143078340858/"
+            }
+        ];
+
+        let map;
+
+        // タブ切り替え機能
+        function switchTab(tab) {
+            const tabs = document.querySelectorAll('.tab-button');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+            
+            if (tab === 'map') {
+                tabs[0].classList.add('active');
+                document.getElementById('map-tab').classList.add('active');
+                // 地図のリサイズ
+                setTimeout(() => {
+                    if (map) {
+                        map.invalidateSize();
+                    }
+                }, 100);
+            } else {
+                tabs[1].classList.add('active');
+                document.getElementById('list-tab').classList.add('active');
+            }
+        }
+
+        // 物件カード生成（リンクボタン付き）
+        function generatePropertyCards() {
+            const container = document.getElementById('property-cards');
+            
+            properties.forEach(prop => {
+                const costPerformance = (prop.size / (prop.price / 1000)).toFixed(2);
+                
+                const card = document.createElement('div');
+                card.className = 'property-card';
+                card.innerHTML = `
+                    <div class="property-header">
+                        <div class="rank-badge">${prop.rank}位</div>
+                        <div class="property-name">${prop.name}</div>
+                    </div>
+                    
+                    <div class="property-price">💰 ${prop.price.toLocaleString()}バーツ/月</div>
+                    
+                    <div class="property-highlight">${prop.highlight}</div>
+                    
+                    <div class="property-details">
+                        <div class="detail-row">
+                            <span class="detail-icon">📐</span>
+                            <span><strong>${prop.size}㎡</strong> | 🛏 ${prop.bedrooms}BR | 🚿 ${prop.bathrooms}Bath</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-icon">🚉</span>
+                            <span>${prop.station}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-icon">🏗</span>
+                            <span>${prop.age}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-icon">✨</span>
+                            <span>${prop.features}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="property-footer">
+                        💵 コスパ: <strong>${costPerformance}㎡/1000B</strong>
+                    </div>
+                    
+                    <a href="${prop.propertyUrl}" target="_blank" rel="noopener noreferrer" class="view-button">
+                        🔗 物件詳細を見る
+                    </a>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        // Leaflet地図初期化
+        function initMap() {
+            // 地図作成（バンコク中心）
+            map = L.map('map').setView([13.76, 100.57], 12);
+
+            // OpenStreetMapタイル追加
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // 全マーカーの境界設定用
+            const bounds = [];
+
+            properties.forEach(property => {
+                const costPerformance = (property.size / (property.price / 1000)).toFixed(2);
+
+                // 円形マーカー作成
+                const marker = L.circleMarker([property.lat, property.lng], {
+                    radius: 14,
+                    fillColor: property.color,
+                    color: "white",
+                    weight: 3,
+                    opacity: 1,
+                    fillOpacity: 0.9
+                }).addTo(map);
+
+                // ポップアップ内容（リンク付き）
+                const popupContent = `
+                    <div class="popup-content">
+                        <h3>${property.rank}位: ${property.name}</h3>
+                        <div class="popup-price">💰 ${property.price.toLocaleString()}バーツ/月</div>
+                        <div class="popup-highlight">${property.highlight}</div>
+                        <div class="popup-detail">📐 ${property.size}㎡ | 🛏 ${property.bedrooms}BR | 🚿 ${property.bathrooms}Bath</div>
+                        <div class="popup-detail">🚉 ${property.station}</div>
+                        <div class="popup-detail">🏗 ${property.age}</div>
+                        <div class="popup-detail">✨ ${property.features}</div>
+                        <div class="popup-footer">💵 コスパ: <strong>${costPerformance}㎡/1000B</strong></div>
+                        <a href="${property.propertyUrl}" target="_blank" rel="noopener noreferrer" class="popup-link">
+                            🔗 物件詳細を見る
+                        </a>
+                    </div>
+                `;
+
+                marker.bindPopup(popupContent, {
+                    maxWidth: 300,
+                    className: 'custom-popup'
+                });
+
+                // 順位番号ラベル追加
+                const rankIcon = L.divIcon({
+                    className: 'custom-marker',
+                    html: `<div class="custom-marker" style="background-color: ${property.color};">${property.rank}</div>`,
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 14]
+                });
+
+                L.marker([property.lat, property.lng], {
+                    icon: rankIcon,
+                    interactive: false
+                }).addTo(map);
+
+                bounds.push([property.lat, property.lng]);
+            });
+
+            // 全物件が見えるようにズーム調整
+            if (bounds.length > 0) {
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
+        }
+
+        // 初期化処理
+        window.addEventListener('load', function() {
+            generatePropertyCards();
+            initMap();
+        });
+    </script>
+</body>
+</html>

@@ -1,16 +1,19 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>バンコク物件候補 - モバイル版</title>
+    <title>คอนโดในกรุงเทพฯ - รายชื่อผู้เข้าชิง 7 อันดับ</title>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
           crossorigin=""/>
+    
+    <!-- Google Fonts for Thai -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
         * {
@@ -20,14 +23,14 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'Prompt', 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
             background: #f8f9fa;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
             -webkit-tap-highlight-color: transparent;
         }
         
-        /* タブナビゲーション */
+        /* แถบเมนูด้านบน */
         .tab-container {
             position: fixed;
             top: 0;
@@ -50,6 +53,7 @@
             cursor: pointer;
             transition: all 0.3s ease;
             border-bottom: 3px solid transparent;
+            font-family: 'Prompt', sans-serif;
         }
         
         .tab-button.active {
@@ -62,7 +66,7 @@
             background: #e8f0fe;
         }
         
-        /* コンテンツエリア */
+        /* พื้นที่เนื้อหา */
         .content {
             margin-top: 58px;
             padding-bottom: 20px;
@@ -76,13 +80,13 @@
             display: block;
         }
         
-        /* 地図スタイル */
+        /* แผนที่ */
         #map {
             width: 100%;
             height: calc(100vh - 58px);
         }
         
-        /* Leafletポップアップカスタマイズ */
+        /* ป๊อปอัพของ Leaflet */
         .leaflet-popup-content-wrapper {
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
@@ -90,7 +94,7 @@
         
         .leaflet-popup-content {
             margin: 12px 14px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Prompt', sans-serif;
         }
         
         .popup-content h3 {
@@ -99,6 +103,7 @@
             color: #1a73e8;
             border-bottom: 2px solid #eee;
             padding-bottom: 6px;
+            font-weight: 600;
         }
         
         .popup-price {
@@ -114,7 +119,7 @@
             border-radius: 6px;
             margin: 8px 0;
             border-left: 4px solid #ffc107;
-            font-weight: bold;
+            font-weight: 600;
             font-size: 13px;
         }
         
@@ -122,6 +127,7 @@
             margin: 6px 0;
             font-size: 13px;
             color: #333;
+            line-height: 1.5;
         }
         
         .popup-footer {
@@ -144,9 +150,10 @@
             font-weight: bold;
             font-size: 13px;
             transition: all 0.3s ease;
+            line-height: 1.4;
         }
         
-        /* 物件リストスタイル */
+        /* รายการคอนโด */
         .property-list {
             padding: 16px;
         }
@@ -161,15 +168,16 @@
         }
         
         .list-header h2 {
-            font-size: 22px;
+            font-size: 21px;
             margin-bottom: 16px;
             text-align: center;
+            font-weight: 600;
         }
         
         .legend-mobile {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 10px;
         }
         
         .legend-item-mobile {
@@ -223,7 +231,7 @@
             margin-right: 12px;
             flex-shrink: 0;
             box-shadow: 0 3px 8px rgba(26, 115, 232, 0.3);
-            min-width: 50px;
+            min-width: 60px;
             text-align: center;
         }
         
@@ -232,6 +240,13 @@
             font-weight: 700;
             color: #333;
             line-height: 1.4;
+        }
+        
+        .property-name-th {
+            font-size: 16px;
+            font-weight: 500;
+            color: #666;
+            margin-top: 4px;
         }
         
         .property-price {
@@ -256,6 +271,7 @@
             font-size: 14px;
             color: #856404;
             box-shadow: 0 2px 6px rgba(255, 193, 7, 0.2);
+            line-height: 1.5;
         }
         
         .property-details {
@@ -306,9 +322,10 @@
             border-radius: 12px;
             text-decoration: none;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 15px;
             box-shadow: 0 4px 16px rgba(26, 115, 232, 0.3);
             transition: all 0.3s ease;
+            line-height: 1.4;
         }
         
         .view-button:active {
@@ -316,7 +333,7 @@
             box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
         }
         
-        /* カスタムマーカー番号 */
+        /* หมายเลขบนแผนที่ */
         .custom-marker {
             background-color: white;
             border: 3px solid white;
@@ -334,45 +351,45 @@
     </style>
 </head>
 <body>
-    <!-- タブナビゲーション -->
+    <!-- แถบเมนู -->
     <div class="tab-container">
-        <button class="tab-button active" onclick="switchTab('map')">🗺 地図</button>
-        <button class="tab-button" onclick="switchTab('list')">📋 一覧</button>
+        <button class="tab-button active" onclick="switchTab('map')">🗺 แผนที่</button>
+        <button class="tab-button" onclick="switchTab('list')">📋 รายการ</button>
     </div>
     
-    <!-- コンテンツ -->
+    <!-- เนื้อหา -->
     <div class="content">
-        <!-- 地図タブ -->
+        <!-- แท็บแผนที่ -->
         <div id="map-tab" class="tab-content active">
             <div id="map"></div>
         </div>
         
-        <!-- 一覧タブ -->
+        <!-- แท็บรายการ -->
         <div id="list-tab" class="tab-content">
             <div class="property-list">
                 <div class="list-header">
-                    <h2>🏆 最終候補7物件</h2>
+                    <h2>🏆 คอนโดผู้เข้าชิง 7 อันดับแรก</h2>
                     <div class="legend-mobile">
                         <div class="legend-item-mobile">
                             <span class="color-indicator" style="background: #e74c3c;"></span>
-                            1位：最広68㎡
+                            อันดับ 1: ใหญ่ที่สุด 68㎡
                         </div>
                         <div class="legend-item-mobile">
                             <span class="color-indicator" style="background: #e67e22;"></span>
-                            2-3位：60㎡台
+                            อันดับ 2-3: 60㎡+
                         </div>
                         <div class="legend-item-mobile">
                             <span class="color-indicator" style="background: #f39c12;"></span>
-                            4-5位：コスパ◎
+                            อันดับ 4-5: คุ้มค่า
                         </div>
                         <div class="legend-item-mobile">
                             <span class="color-indicator" style="background: #27ae60;"></span>
-                            6-7位：60㎡
+                            อันดับ 6-7: 60㎡
                         </div>
                     </div>
                 </div>
                 
-                <!-- 物件カード（データから自動生成） -->
+                <!-- การ์ดคอนโด -->
                 <div id="property-cards"></div>
             </div>
         </div>
@@ -384,125 +401,132 @@
             crossorigin=""></script>
 
     <script>
-        // 物件データ（指定座標＋リンク完備）
+        // ข้อมูลคอนโด (ฉบับภาษาไทย)
         const properties = [
             {
                 rank: 1,
                 name: "Belle Grand Rama 9",
+                nameTh: "เบลล์ แกรนด์ พระราม 9",
                 lat: 13.760237221313165,
                 lng: 100.56921625457834,
                 size: 68,
                 bedrooms: 2,
                 bathrooms: 1,
                 price: 35000,
-                station: "MRT Phra Ram 9駅 徒歩5-8分",
-                age: "築12年",
-                features: "プール・フィットネス・敷地内商業施設",
+                station: "MRT พระราม 9 (เดิน 5-8 นาที)",
+                age: "อายุอาคาร 12 ปี",
+                features: "สระว่ายน้ำ, ฟิตเนส, ห้างในโครงการ",
                 color: "#e74c3c",
-                highlight: "今回最大の広さ！68㎡",
+                highlight: "ห้องใหญ่ที่สุด 68 ตร.ม.!",
                 propertyUrl: "https://www.facebook.com/groups/6521519787867197/posts/25934857656106787/"
             },
             {
                 rank: 2,
                 name: "Ideo Q Phayathai",
+                nameTh: "ไอดีโอ คิว พญาไท",
                 lat: 13.755906097726632,
                 lng: 100.53277004848589,
                 size: 65,
                 bedrooms: 2,
                 bathrooms: 2,
                 price: 35000,
-                station: "BTS Phaya Thai駅 徒歩2-3分",
-                age: "築15年",
-                features: "プール・空港線直結",
+                station: "BTS พญาไท (เดิน 2-3 นาที)",
+                age: "อายุอาคาร 15 ปี",
+                features: "สระว่ายน้ำ, ต่อ Airport Link ได้",
                 color: "#e67e22",
-                highlight: "空港アクセス抜群",
+                highlight: "เดินทางสนามบินสะดวกมาก",
                 propertyUrl: "https://propertyscout.co.th/en/2-br-condo-ideo-q-phayathai-near-bts-phaya-thai-1852140/"
             },
             {
                 rank: 3,
                 name: "The Address Phayathai",
+                nameTh: "ดิ แอดเดรส พญาไท",
                 lat: 13.759685947389874,
                 lng: 100.5317286545783,
                 size: 63,
                 bedrooms: 2,
                 bathrooms: 1,
                 price: 25000,
-                station: "BTS Phaya Thai駅 徒歩5分",
-                age: "築14年",
-                features: "サウナ・プール",
+                station: "BTS พญาไท (เดิน 5 นาที)",
+                age: "อายุอาคาร 14 ปี",
+                features: "ซาวน่า, สระว่ายน้ำ",
                 color: "#e67e22",
-                highlight: "最強コスパ！2.52㎡/1000B",
+                highlight: "คุ้มค่าที่สุด! 2.52 ตร.ม./1,000฿",
                 propertyUrl: "https://propertyscout.co.th/en/2-br-condo-the-address-phayathai-near-bts-phaya-thai-2351890/"
             },
             {
                 rank: 4,
                 name: "Thru Thonglor",
+                nameTh: "ทรู ทองหล่อ",
                 lat: 13.744439248847318,
                 lng: 100.58543526807097,
                 size: 62.4,
                 bedrooms: 2,
                 bathrooms: 2,
                 price: 25000,
-                station: "BTS Thong Lo駅（シャトル有）",
-                age: "築12年",
-                features: "プール・トンローエリア",
+                station: "BTS ทองหล่อ (มีรถรับส่ง)",
+                age: "อายุอาคาร 12 ปี",
+                features: "สระว่ายน้ำ, ย่านทองหล่อ",
                 color: "#f39c12",
-                highlight: "おしゃれエリアで破格価格",
+                highlight: "ราคาดีในย่านทองหล่อ",
                 propertyUrl: "https://www.facebook.com/groups/1046291836187649/posts/2191321105018044/"
             },
             {
                 rank: 5,
                 name: "The Line Vibe",
+                nameTh: "เดอะ ไลน์ ไวบ์",
                 lat: 13.817796190281511,
                 lng: 100.56709881040038,
                 size: 60,
                 bedrooms: 2,
                 bathrooms: 2,
                 price: 25000,
-                station: "BTS Ha Yaek Lat Phrao駅 徒歩5分",
-                age: "比較的新しい",
-                features: "プール・Lineブランド",
+                station: "BTS ห้าแยกลาดพร้าว (เดิน 5 นาที)",
+                age: "ค่อนข้างใหม่",
+                features: "สระว่ายน้ำ, แบรนด์ไลน์",
                 color: "#f39c12",
-                highlight: "60㎡で2バスルーム",
+                highlight: "60 ตร.ม. มี 2 ห้องน้ำ",
                 propertyUrl: "https://www.facebook.com/groups/661207761960248/posts/1383242806423403/"
             },
             {
                 rank: 6,
                 name: "Ideo O2",
+                nameTh: "ไอดีโอ โอทู",
                 lat: 13.67342536698527,
                 lng: 100.60445935773538,
                 size: 60,
                 bedrooms: 2,
                 bathrooms: 2,
                 price: 28000,
-                station: "BTS Bang Na駅 徒歩5-10分",
-                age: "築7年",
-                features: "3つのプール・リゾート級施設",
+                station: "BTS บางนา (เดิน 5-10 นาที)",
+                age: "อายุอาคาร 7 ปี",
+                features: "สระ 3 สระ, ส่วนกลางสไตล์รีสอร์ท",
                 color: "#27ae60",
-                highlight: "リゾート並みの共用施設",
+                highlight: "ส่วนกลางใหญ่สไตล์รีสอร์ท",
                 propertyUrl: "https://www.facebook.com/groups/1046291836187649/posts/2192147568268731/"
             },
             {
                 rank: 7,
                 name: "M Jatujak",
+                nameTh: "เอ็ม จตุจักร",
                 lat: 13.797914490603361,
                 lng: 100.55174575457877,
                 size: 60,
                 bedrooms: 2,
                 bathrooms: 2,
                 price: 30000,
-                station: "BTS Mo Chit/MRT Chatuchak Park駅 徒歩5分",
-                age: "築7年",
-                features: "プール・2路線利用可",
+                station: "BTS หมอชิต/MRT จตุจักร (เดิน 5 นาที)",
+                age: "อายุอาคาร 7 ปี",
+                features: "สระว่ายน้ำ, เข้าถึง 2 สาย",
                 color: "#27ae60",
-                highlight: "2路線アクセス",
+                highlight: "ใกล้รถไฟฟ้า 2 สาย",
                 propertyUrl: "https://www.facebook.com/groups/2157264477895406/posts/4286143078340858/"
             }
         ];
 
         let map;
 
-        // タブ切り替え機能
+        // เปลี่ยนแท็บ
         function switchTab(tab) {
             const tabs = document.querySelectorAll('.tab-button');
             const contents = document.querySelectorAll('.tab-content');
@@ -513,7 +537,6 @@
             if (tab === 'map') {
                 tabs[0].classList.add('active');
                 document.getElementById('map-tab').classList.add('active');
-                // 地図のリサイズ
                 setTimeout(() => {
                     if (map) {
                         map.invalidateSize();
@@ -525,7 +548,7 @@
             }
         }
 
-        // 物件カード生成（リンクボタン付き）
+        // สร้างการ์ดคอนโด
         function generatePropertyCards() {
             const container = document.getElementById('property-cards');
             
@@ -536,18 +559,21 @@
                 card.className = 'property-card';
                 card.innerHTML = `
                     <div class="property-header">
-                        <div class="rank-badge">${prop.rank}位</div>
-                        <div class="property-name">${prop.name}</div>
+                        <div class="rank-badge">อันดับ ${prop.rank}</div>
+                        <div>
+                            <div class="property-name">${prop.name}</div>
+                            <div class="property-name-th">${prop.nameTh}</div>
+                        </div>
                     </div>
                     
-                    <div class="property-price">💰 ${prop.price.toLocaleString()}バーツ/月</div>
+                    <div class="property-price">💰 ${prop.price.toLocaleString()} บาท/เดือน</div>
                     
                     <div class="property-highlight">${prop.highlight}</div>
                     
                     <div class="property-details">
                         <div class="detail-row">
                             <span class="detail-icon">📐</span>
-                            <span><strong>${prop.size}㎡</strong> | 🛏 ${prop.bedrooms}BR | 🚿 ${prop.bathrooms}Bath</span>
+                            <span><strong>${prop.size} ตร.ม.</strong> | 🛏 ${prop.bedrooms} ห้องนอน | 🚿 ${prop.bathrooms} ห้องน้ำ</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-icon">🚉</span>
@@ -564,11 +590,11 @@
                     </div>
                     
                     <div class="property-footer">
-                        💵 コスパ: <strong>${costPerformance}㎡/1000B</strong>
+                        💵 ความคุ้มค่า: <strong>${costPerformance} ตร.ม./1,000฿</strong>
                     </div>
                     
                     <a href="${prop.propertyUrl}" target="_blank" rel="noopener noreferrer" class="view-button">
-                        🔗 物件詳細を見る
+                        📷 ดูรูปห้องจริง / เพจ Agent
                     </a>
                 `;
                 
@@ -576,24 +602,20 @@
             });
         }
 
-        // Leaflet地図初期化
+        // ตั้งค่าแผนที่
         function initMap() {
-            // 地図作成（バンコク中心）
             map = L.map('map').setView([13.76, 100.57], 12);
 
-            // OpenStreetMapタイル追加
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
                 maxZoom: 19
             }).addTo(map);
 
-            // 全マーカーの境界設定用
             const bounds = [];
 
             properties.forEach(property => {
                 const costPerformance = (property.size / (property.price / 1000)).toFixed(2);
 
-                // 円形マーカー作成
                 const marker = L.circleMarker([property.lat, property.lng], {
                     radius: 14,
                     fillColor: property.color,
@@ -603,19 +625,18 @@
                     fillOpacity: 0.9
                 }).addTo(map);
 
-                // ポップアップ内容（リンク付き）
                 const popupContent = `
                     <div class="popup-content">
-                        <h3>${property.rank}位: ${property.name}</h3>
-                        <div class="popup-price">💰 ${property.price.toLocaleString()}バーツ/月</div>
+                        <h3>อันดับ ${property.rank}: ${property.nameTh}</h3>
+                        <div class="popup-price">💰 ${property.price.toLocaleString()} บาท/เดือน</div>
                         <div class="popup-highlight">${property.highlight}</div>
-                        <div class="popup-detail">📐 ${property.size}㎡ | 🛏 ${property.bedrooms}BR | 🚿 ${property.bathrooms}Bath</div>
+                        <div class="popup-detail">📐 ${property.size} ตร.ม. | 🛏 ${property.bedrooms} ห้องนอน | 🚿 ${property.bathrooms} ห้องน้ำ</div>
                         <div class="popup-detail">🚉 ${property.station}</div>
                         <div class="popup-detail">🏗 ${property.age}</div>
                         <div class="popup-detail">✨ ${property.features}</div>
-                        <div class="popup-footer">💵 コスパ: <strong>${costPerformance}㎡/1000B</strong></div>
+                        <div class="popup-footer">💵 ความคุ้มค่า: <strong>${costPerformance} ตร.ม./1,000฿</strong></div>
                         <a href="${property.propertyUrl}" target="_blank" rel="noopener noreferrer" class="popup-link">
-                            🔗 物件詳細を見る
+                            📷 ดูรูปห้องจริง / เพจ Agent
                         </a>
                     </div>
                 `;
@@ -625,7 +646,6 @@
                     className: 'custom-popup'
                 });
 
-                // 順位番号ラベル追加
                 const rankIcon = L.divIcon({
                     className: 'custom-marker',
                     html: `<div class="custom-marker" style="background-color: ${property.color};">${property.rank}</div>`,
@@ -641,13 +661,12 @@
                 bounds.push([property.lat, property.lng]);
             });
 
-            // 全物件が見えるようにズーム調整
             if (bounds.length > 0) {
                 map.fitBounds(bounds, { padding: [50, 50] });
             }
         }
 
-        // 初期化処理
+        // เริ่มต้น
         window.addEventListener('load', function() {
             generatePropertyCards();
             initMap();
